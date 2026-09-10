@@ -1,0 +1,1688 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mario CPU League Draft Lottery — Results Under Arena + Anim + Banner</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --text:#e8eeff;
+      --muted:#aab6e6;
+      --good:#4ee6a8;
+      --danger:#ff6b6b;
+      --warn:#ffd166;
+      --accent:#6ea8ff;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 10%, #1a2a5a 0%, var(--bg) 60%);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:24px;
+    }
+    .wrap{ width:min(1100px, 100%); display:grid; gap:18px; grid-template-columns: 1.2fr 0.8fr; }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border:1px solid rgba(255,255,255,0.12);
+      border-radius:16px;
+      padding:18px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    h1{ font-size:20px; margin:0 0 10px; }
+    p{ margin:6px 0 0; color:var(--muted); }
+
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; align-items:center; }
+    button{
+      background: rgba(110,168,255,0.15);
+      color:var(--text);
+      border:1px solid rgba(110,168,255,0.35);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:900;
+      transition: transform .08s ease, background .2s ease, opacity .2s ease;
+    }
+    button:hover{ background: rgba(110,168,255,0.22); }
+    button:active{ transform: scale(0.98); }
+    button.secondary{ background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.16); }
+    button.danger{ background: rgba(255,107,107,0.14); border-color: rgba(255,107,107,0.35); }
+    button:disabled{ opacity:.45; cursor:not-allowed; }
+
+    .toggle{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:9px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-weight:850;
+      font-size:13px;
+      user-select:none;
+    }
+    .toggle input{ transform: translateY(1px); }
+
+    .slider{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:9px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-weight:850;
+      font-size:13px;
+      user-select:none;
+    }
+    .slider input[type="range"]{ width:140px; }
+
+    .select{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:9px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-weight:850;
+      font-size:13px;
+      user-select:none;
+    }
+    .select select{
+      background: rgba(0,0,0,0.25);
+      color: var(--text);
+      border:1px solid rgba(255,255,255,0.18);
+      border-radius:10px;
+      padding:6px 10px;
+      font-weight:850;
+      outline:none;
+    }
+
+    .hint{ font-size:12px; color:var(--muted); margin-top:8px; }
+
+    .stage{
+      position:relative;
+      height:440px;
+      overflow:hidden;
+      border-radius:16px;
+      background:
+        radial-gradient(650px 280px at 40% 25%, rgba(110,168,255,0.18), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(17,26,51,0.8), rgba(10,14,28,0.9));
+      border:1px solid rgba(255,255,255,0.12);
+      padding:14px;
+    }
+    .panes{
+      display:grid;
+      grid-template-columns: 1fr 0.48fr;
+      gap:14px;
+      height:100%;
+    }
+    .arena{
+      position:relative;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      overflow:hidden;
+    }
+    .arena::after{
+      content:"";
+      position:absolute; inset:auto 0 0 0;
+      height:80px;
+      background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.45));
+      pointer-events:none;
+    }
+    .announce{
+      position:relative;
+      border-radius:16px;
+      border:1px dashed rgba(255,255,255,0.24);
+      background: rgba(255,255,255,0.03);
+      overflow:hidden;
+      display:grid;
+      grid-template-rows: auto auto 1fr auto;
+      padding:12px;
+      gap:10px;
+    }
+    .announce .pick{
+      font-weight:950;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .announce .name{
+      font-weight:1000;
+      font-size:16px;
+      line-height:1.2;
+      min-height:40px;
+    }
+    .announce .sub{
+      font-weight:850;
+      color:var(--muted);
+      font-size:12px;
+      min-height:16px;
+    }
+    .winner-slot{
+      position:relative;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      height:220px;
+      width:100%;
+    }
+
+    /* Arena balls */
+    .ball{
+      position:absolute;
+      width:92px; height:92px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      user-select:none;
+      box-shadow:
+        inset 0 10px 18px rgba(255,255,255,0.45),
+        inset 0 -16px 20px rgba(0,0,0,0.25),
+        0 24px 40px rgba(0,0,0,0.45);
+      will-change: left, top;
+      transform: translate(-50%, -50%);
+    }
+    .ball-inner{
+      width:60px; height:60px;
+      border-radius:50%;
+      background: rgba(255,255,255,0.92);
+      display:grid;
+      place-items:center;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.15);
+      overflow:hidden;
+    }
+    .ball-inner img{
+      width:46px;
+      height:46px;
+      object-fit:contain;
+      display:block;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.25));
+    }
+    .fallback{ font-weight:950; font-size:18px; color:#0b1020; letter-spacing:0.6px; }
+
+    /* Winner ball bigger */
+    .winner-slot .ball{ width:150px; height:150px; }
+    .winner-slot .ball .ball-inner{ width:104px; height:104px; }
+    .winner-slot .ball .ball-inner img{ width:84px; height:84px; }
+    .winner-slot .ball .fallback{ font-size:26px; }
+
+    .dropping{
+      transition: left 560ms ease, top 560ms ease, transform 560ms ease, opacity 560ms ease, filter 560ms ease;
+      transform: translate(-50%,-50%) scale(1.06);
+    }
+    .fading{
+      transition: opacity 260ms ease, filter 260ms ease;
+      opacity:0;
+      filter: grayscale(1) brightness(0.7);
+    }
+
+    /* Sidebar */
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px; border-radius:999px;
+      border:1px solid rgba(78,230,168,0.35);
+      background: rgba(78,230,168,0.12);
+      color: var(--good);
+      font-weight:950;
+      font-size:12px;
+    }
+    .list{ display:flex; gap:10px; flex-wrap:wrap; }
+    .pill{
+      padding:9px 10px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-weight:900;
+      font-size:13px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-width: 170px;
+      flex: 1 1 170px;
+    }
+    .pill.out{ opacity:.45; text-decoration: line-through; }
+    .pill-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .pill-name{ display:flex; align-items:center; gap:8px; min-width:0; }
+    .pill-tag{
+      display:inline-grid;
+      place-items:center;
+      width:26px; height:26px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.14);
+      border:1px solid rgba(255,255,255,0.16);
+      font-size:11px;
+      letter-spacing:0.6px;
+      flex: 0 0 auto;
+    }
+    .pill-team{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 190px;
+    }
+    .pill-odds{ font-weight:1000; color: var(--muted); flex: 0 0 auto; }
+
+    /* Odds bar */
+    .oddsbar{
+      width:100%;
+      height:10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.18);
+      overflow:hidden;
+    }
+    .oddsfill{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(110,168,255,0.85), rgba(78,230,168,0.85));
+      border-radius:999px;
+      transition: width 120ms ease;
+    }
+
+    /* ===== RESULTS UNDER ARENA ===== */
+    .results{
+      margin-top:18px;
+      padding-top:14px;
+      border-top:1px solid rgba(255,255,255,0.12);
+    }
+    .results h1{
+      font-size:24px;
+      font-weight:1000;
+      margin:0 0 12px 0;
+      text-align:center;
+    }
+
+    .banner{
+      display:flex;
+      justify-content:center;
+      margin: 6px 0 14px 0;
+    }
+    .banner-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255, 209, 102, 0.35);
+      background: rgba(255, 209, 102, 0.12);
+      color: var(--warn);
+      font-weight:1000;
+      letter-spacing:0.3px;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.25);
+      transform: translateY(-4px);
+      opacity:0;
+      transition: opacity 220ms ease, transform 220ms ease;
+    }
+    .banner-pill.show{
+      opacity:1;
+      transform: translateY(0);
+    }
+    .banner-dot{
+      width:10px; height:10px;
+      border-radius:999px;
+      background: var(--warn);
+      box-shadow: 0 0 0 6px rgba(255, 209, 102, 0.18);
+    }
+
+    .results ol{
+      margin:0;
+      padding-left: 0;
+      max-height: 260px;
+      overflow-y:auto;
+      padding-right: 6px;
+      scroll-behavior: smooth;
+    }
+    .results li{
+      margin:10px 0;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:16px;
+      list-style: none;
+      font-size:18px;
+      line-height:1.1;
+      padding:10px 10px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+    }
+
+    /* Newest result animation */
+    @keyframes slideInFromAbove{
+      0% { opacity:0; transform: translateY(-16px); }
+      70%{ opacity:1; transform: translateY(2px); }
+      100%{ opacity:1; transform: translateY(0); }
+    }
+    .results li.newest{
+      animation: slideInFromAbove 360ms ease-out;
+      box-shadow: 0 12px 26px rgba(0,0,0,0.25);
+      border-color: rgba(110,168,255,0.22);
+    }
+
+    .result-ball{
+      width:64px;
+      height:64px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      box-shadow:
+        inset 0 3px 7px rgba(255,255,255,0.25),
+        inset 0 -8px 12px rgba(0,0,0,0.22),
+        0 10px 16px rgba(0,0,0,0.35);
+      flex: 0 0 auto;
+    }
+    .result-ball .inner{
+      width:44px;
+      height:44px;
+      border-radius:50%;
+      background: rgba(255,255,255,0.92);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.12);
+    }
+    .result-ball img{ width:38px; height:38px; object-fit:contain; display:block; }
+    .result-ball .fallback{ font-size:14px; font-weight:950; color:#0b1020; letter-spacing:0.4px; }
+
+    /* Odds panel */
+    .odds-panel{
+      margin-top:14px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+    }
+    .odds-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .odds-head h2{ margin:0; font-size:16px; font-weight:1000; letter-spacing:0.2px; }
+    .odds-meta{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      text-align:right;
+    }
+    .chip{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.18);
+      color: var(--muted);
+      font-weight:950;
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .chip.warn{
+      border-color: rgba(255, 209, 102, 0.35);
+      background: rgba(255, 209, 102, 0.12);
+      color: var(--warn);
+    }
+    .chip.ok{
+      border-color: rgba(78,230,168,0.35);
+      background: rgba(78,230,168,0.12);
+      color: var(--good);
+    }
+    .odds-actions{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .odds-actions button{ padding:8px 10px; border-radius:12px; font-size:12px; font-weight:1000; }
+
+    .odds-rows{
+      margin-top:10px;
+      display:grid;
+      gap:10px;
+      max-height: 260px;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    .odds-row{
+      display:grid;
+      grid-template-columns: 56px 1fr 92px;
+      gap:10px;
+      align-items:center;
+      padding:10px;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.16);
+    }
+    .odds-ball{
+      width:52px; height:52px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      box-shadow:
+        inset 0 4px 8px rgba(255,255,255,0.22),
+        inset 0 -9px 14px rgba(0,0,0,0.22),
+        0 10px 16px rgba(0,0,0,0.35);
+    }
+    .odds-ball .inner{
+      width:34px; height:34px;
+      border-radius:50%;
+      background: rgba(255,255,255,0.92);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+    }
+    .odds-ball img{ width:26px; height:26px; object-fit:contain; display:block; }
+    .odds-ball .fallback{ font-size:11px; font-weight:1000; color:#0b1020; }
+
+    .odds-mid{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .odds-mid .rowtop{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:baseline;
+    }
+    .odds-name{
+      font-weight:1000;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .odds-pct{
+      font-weight:1000;
+      color: var(--muted);
+      white-space:nowrap;
+    }
+
+    .odds-input{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      align-items:flex-end;
+    }
+    .odds-input input{
+      width:92px;
+      padding:8px 8px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.18);
+      background: rgba(0,0,0,0.28);
+      color: var(--text);
+      font-weight:1000;
+      outline:none;
+      text-align:right;
+    }
+    .odds-input small{ color: var(--muted); font-weight:900; }
+
+    /* FINAL RESULTS OVERLAY (unchanged) */
+    .overlay{
+      position:fixed;
+      inset:0;
+      display:none;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px);
+      z-index:9999;
+      padding:22px;
+    }
+    .overlay.show{ display:block; }
+    .overlay-panel{
+      width:min(1100px, 96vw);
+      margin: 0 auto;
+      height: calc(100vh - 44px);
+      border-radius:22px;
+      border:1px solid rgba(255,255,255,0.14);
+      background:
+        radial-gradient(900px 500px at 30% 10%, rgba(110,168,255,0.22), rgba(0,0,0,0) 60%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+      overflow:hidden;
+      display:grid;
+      grid-template-rows: auto auto 1fr auto;
+    }
+    .overlay-head{
+      padding:18px 18px 10px 18px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      border-bottom:1px solid rgba(255,255,255,0.10);
+    }
+    .overlay-title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .overlay-title h2{
+      margin:0;
+      font-size:26px;
+      letter-spacing:0.2px;
+      font-weight:1000;
+    }
+    .overlay-title p{
+      margin:0;
+      color:var(--muted);
+      font-weight:800;
+    }
+    .overlay-actions{
+      padding-top:4px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .overlay-actions button{ padding:10px 14px; border-radius:14px; }
+    .overlay-sub{
+      padding:10px 18px 14px 18px;
+      border-bottom:1px solid rgba(255,255,255,0.10);
+      color:var(--muted);
+      font-weight:850;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .final-grid{
+      padding:16px 18px;
+      overflow:auto;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:14px;
+    }
+    @media (max-width: 900px){
+      .final-grid{ grid-template-columns: 1fr; }
+    }
+    .final-row{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      padding:14px 14px;
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.25);
+    }
+    .final-pick{
+      width:64px; height:64px;
+      border-radius:18px;
+      display:grid;
+      place-items:center;
+      border:1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.25);
+      font-weight:1000;
+      font-size:18px;
+      color: var(--text);
+      flex: 0 0 auto;
+    }
+    .final-ball{
+      width:88px; height:88px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      box-shadow:
+        inset 0 10px 16px rgba(255,255,255,0.30),
+        inset 0 -16px 22px rgba(0,0,0,0.25),
+        0 18px 30px rgba(0,0,0,0.45);
+      flex: 0 0 auto;
+    }
+    .final-ball .inner{
+      width:60px; height:60px;
+      border-radius:50%;
+      background: rgba(255,255,255,0.95);
+      display:grid;
+      place-items:center;
+      overflow:hidden;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.14);
+    }
+    .final-ball img{
+      width:52px; height:52px;
+      object-fit:contain; display:block;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+    }
+    .final-ball .fallback{ font-size:16px; font-weight:1000; color:#0b1020; letter-spacing:0.4px; }
+    .final-name{ font-size:20px; font-weight:1000; line-height:1.1; }
+    .overlay-foot{
+      padding:12px 18px;
+      border-top:1px solid rgba(255,255,255,0.10);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      color:var(--muted);
+      font-weight:850;
+    }
+
+    @media (max-width: 950px){
+      .wrap{ grid-template-columns: 1fr; }
+      .stage{ height:560px; }
+      .panes{ grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+      .winner-slot{ height:240px; }
+      .slider input[type="range"]{ width:120px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- LEFT / MAIN -->
+    <div class="card">
+      <h1>Mario CPU League Draft Lottery</h1>
+      <p>
+        Results now appear under the bouncing balls. Newest result slides in, and the list auto-scrolls.
+      </p>
+
+      <div class="controls">
+        <button id="beginBtn">Begin</button>
+        <button id="stopBtn" class="secondary" disabled>Stop</button>
+        <button id="resetBtn" class="danger">Reset</button>
+
+        <label class="toggle" title="Turn sound effects on/off">
+          <input id="sfxToggle" type="checkbox" checked />
+          SFX
+        </label>
+
+        <div class="slider" title="Controls only the background music volume">
+          <span>Music</span>
+          <input id="musicVol" type="range" min="0" max="100" value="55" />
+          <span id="musicVolLabel">55%</span>
+        </div>
+
+        <div class="select" title="Pick numbering direction">
+          <span>Pick Order</span>
+          <select id="pickDirection">
+            <option value="asc" selected>1 → 10</option>
+            <option value="desc">10 → 1</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="hint">
+        Sounds: <b>sounds/MSStheme.mp3</b>, <b>sounds/drop.mp3</b>, <b>sounds/cheer.mp3</b>
+      </div>
+
+      <!-- AUDIO -->
+      <audio id="musicAudio" preload="auto" loop>
+        <source src="sounds/MSStheme.mp3" type="audio/mpeg" />
+        <source src="sounds/MSStheme.wav" type="audio/wav" />
+      </audio>
+      <audio id="dropAudio" preload="auto">
+        <source src="sounds/drop.mp3" type="audio/mpeg" />
+        <source src="sounds/drop.wav" type="audio/wav" />
+      </audio>
+      <audio id="cheerAudio" preload="auto">
+        <source src="sounds/cheer.mp3" type="audio/mpeg" />
+        <source src="sounds/cheer.wav" type="audio/wav" />
+      </audio>
+
+      <div style="height:14px"></div>
+
+      <div class="stage">
+        <div class="panes">
+          <div class="arena" id="arena"></div>
+
+          <div class="announce">
+            <div class="pick" id="pickLabel">Pick #1</div>
+            <div class="winner-slot" id="winnerSlot"></div>
+            <div class="name" id="winnerName">Ready…</div>
+            <div class="sub" id="winnerSub">Press Begin to start.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTS MOVED UNDER ARENA -->
+      <div class="results">
+        <div class="banner">
+          <div class="banner-pill" id="pickBanner">
+            <span class="banner-dot"></span>
+            <span id="bannerText">PICK IS IN!</span>
+          </div>
+        </div>
+        <h1>Draft Results</h1>
+        <ol id="resultsList"></ol>
+      </div>
+    </div>
+
+    <!-- RIGHT / SIDEBAR -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+        <h1 style="margin:0;">Teams</h1>
+        <span class="badge" id="remainingBadge">10 remaining</span>
+      </div>
+
+      <!-- ODDS EDITOR PANEL -->
+      <div class="odds-panel" id="oddsPanel">
+        <div class="odds-head">
+          <div>
+            <h2>Odds Editor</h2>
+            <div style="margin-top:6px; color:var(--muted); font-weight:850; font-size:12px;">
+              Type odds, press <b>Enter</b> to apply. (Total ideally = 100%.)
+            </div>
+          </div>
+          <div class="odds-meta">
+            <span class="chip" id="oddsTotalChip">Total: 100.0%</span>
+            <span class="chip ok" id="oddsStatusChip">Valid</span>
+          </div>
+        </div>
+
+        <div class="odds-actions" style="margin-top:10px;">
+          <button id="resetOddsBtn" class="secondary" title="Set all teams back to equal odds">Reset Odds to Equal</button>
+        </div>
+
+        <div class="odds-rows" id="oddsRows"></div>
+      </div>
+
+      <div class="list" id="teamList" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <!-- FINAL RESULTS OVERLAY -->
+  <div class="overlay" id="finalOverlay" aria-hidden="true">
+    <div class="overlay-panel">
+      <div class="overlay-head">
+        <div class="overlay-title">
+          <h2>Final Pick Order</h2>
+          <p id="finalSubtitle">Complete.</p>
+        </div>
+        <div class="overlay-actions">
+          <button id="finalResetBtn" class="danger">Reset</button>
+        </div>
+      </div>
+
+      <div class="overlay-sub">
+        <div><b>Tip:</b> transparent PNG logos look best on the balls.</div>
+        <div id="finalPickDirText">Pick Order: 1 → 10</div>
+      </div>
+
+      <div class="final-grid" id="finalGrid"></div>
+
+      <div class="overlay-foot">
+        <div>Cheer plays for 10s then fades out.</div>
+        <div>Press <b>Reset</b> to run it again.</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // =========================
+  // TEAMS
+  // =========================
+  const TEAMS = [
+    { name: "Comet Eons",            logo: "logos/comet-eons.png",          color: "#00E5FF", odds: 10 },
+    { name: "Narf Cannons",          logo: "logos/narf-cannons.png",        color: "#FF2F92", odds: 10 },
+    { name: "Waffle Batters",        logo: "logos/waffle-batters.png",      color: "#F3E2C7", odds: 10 },
+    { name: "Nashville Knights",     logo: "logos/nashville-knights.png",   color: "#D97706", odds: 10 },
+    { name: "Sands Bombshells",      logo: "logos/sands-bombshells.png",    color: "#F8F9FA", odds: 10 },
+    { name: "Egg Beaters",           logo: "logos/egg-beaters.png",         color: "#3CB043", odds: 10 },
+    { name: "Hopedogo Retrievers",   logo: "logos/hopedogo-retrievers.png", color: "#D4A373", odds: 10 },
+    { name: "Spikemuth Serperiors",  logo: "logos/spikemuth-serperiors.png",color: "#5C7CFA", odds: 10 },
+    { name: "Kongo Bongo Pirates",   logo: "logos/kongo-bongo-pirates.png", color: "#E60012", odds: 10 },
+    { name: "Dreary Lane",           logo: "logos/dreary-lane.png",         color: "#6B4EFF", odds: 10 },
+  ];
+
+  // --- DOM ---
+  const arena = document.getElementById('arena');
+  const winnerSlot = document.getElementById('winnerSlot');
+  const teamList = document.getElementById('teamList');
+  const resultsList = document.getElementById('resultsList');
+  const remainingBadge = document.getElementById('remainingBadge');
+  const beginBtn = document.getElementById('beginBtn');
+  const stopBtn  = document.getElementById('stopBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const pickLabel  = document.getElementById('pickLabel');
+  const winnerName = document.getElementById('winnerName');
+  const winnerSub  = document.getElementById('winnerSub');
+  const sfxToggle = document.getElementById('sfxToggle');
+  const musicVol = document.getElementById('musicVol');
+  const musicVolLabel = document.getElementById('musicVolLabel');
+  const pickDirectionSel = document.getElementById('pickDirection');
+
+  const musicAudio = document.getElementById('musicAudio');
+  const dropAudio = document.getElementById('dropAudio');
+  const cheerAudio = document.getElementById('cheerAudio');
+
+  // Banner
+  const pickBanner = document.getElementById('pickBanner');
+  const bannerText = document.getElementById('bannerText');
+
+  // Odds panel
+  const oddsRows = document.getElementById('oddsRows');
+  const resetOddsBtn = document.getElementById('resetOddsBtn');
+  const oddsTotalChip = document.getElementById('oddsTotalChip');
+  const oddsStatusChip = document.getElementById('oddsStatusChip');
+
+  // Final overlay DOM
+  const finalOverlay = document.getElementById('finalOverlay');
+  const finalGrid = document.getElementById('finalGrid');
+  const finalResetBtn = document.getElementById('finalResetBtn');
+  const finalSubtitle = document.getElementById('finalSubtitle');
+  const finalPickDirText = document.getElementById('finalPickDirText');
+
+  // --- STATE ---
+  const TEAM_COUNT = TEAMS.length;
+  let remaining = [];
+  let results = [];
+
+  let running = false;
+  let rafId = null;
+  let winnerIndex = null;
+  let balls = [];
+
+  // Speed scaling
+  const SPEED_PER_PICK = 0.12;
+  const BASE_SPEED_MIN = 170;
+  const BASE_SPEED_MAX = 285;
+
+  // Pick direction
+  let pickDirection = "asc";
+
+  // Cheer timers / fades
+  let cheerStartTimer = null;
+  let cheerStopTimer = null;
+  let cheerFadeRaf = null;
+  let finalCheerStopTimer = null;
+
+  // Music fades / timers
+  let musicFadeRaf = null;
+  let musicRaiseTimer = null;
+  let musicInitialized = false;
+
+  // Music volume state
+  let musicBaseVol = 0.55;
+  const MUSIC_LOW_FACTOR = 0.28;
+  const MUSIC_FADE_MS = 450;
+
+  const CHEER_FADE_MS = 650;
+  const FINAL_CHEER_PLAY_MS = 10000;
+
+  // Odds validation
+  const ODDS_TOLERANCE = 0.05;
+
+  // Banner timer
+  let bannerTimer = null;
+
+  // --- Helpers ---
+  function randInt(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function randFloat(min, max){ return Math.random() * (max - min) + min; }
+
+  function getInitials(name){
+    const parts = name.trim().split(/\s+/);
+    return parts.map(w => w[0]).join('').slice(0, 3).toUpperCase();
+  }
+
+  function safePlay(audioEl){
+    if (!audioEl) return;
+    try{
+      const p = audioEl.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }catch(e){}
+  }
+  function safePlaySfx(audioEl){
+    if (!sfxToggle.checked) return;
+    if (!audioEl) return;
+    try{
+      audioEl.currentTime = 0;
+      const p = audioEl.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }catch(e){}
+  }
+  function stopAudio(audioEl){
+    if (!audioEl) return;
+    try{ audioEl.pause(); audioEl.currentTime = 0; }catch(e){}
+  }
+  function fadeVolume(audioEl, from, to, ms, onDone){
+    if (!audioEl) return null;
+    const start = performance.now();
+    const delta = to - from;
+    function step(now){
+      const t = Math.min(1, (now - start) / ms);
+      audioEl.volume = Math.max(0, Math.min(1, from + delta * t));
+      if (t < 1) return requestAnimationFrame(step);
+      if (onDone) onDone();
+      return null;
+    }
+    return requestAnimationFrame(step);
+  }
+
+  // =========================
+  // Banner (Pick is in)
+  // =========================
+  function showBanner(text){
+    if (bannerTimer){ clearTimeout(bannerTimer); bannerTimer = null; }
+    bannerText.textContent = text;
+    pickBanner.classList.add('show');
+    bannerTimer = setTimeout(() => {
+      pickBanner.classList.remove('show');
+      bannerTimer = null;
+    }, 2500);
+  }
+  function hideBanner(){
+    if (bannerTimer){ clearTimeout(bannerTimer); bannerTimer = null; }
+    pickBanner.classList.remove('show');
+  }
+
+  // =========================
+  // Pick numbering direction
+  // =========================
+  function picksDone(){ return TEAM_COUNT - remaining.length; }
+  function currentPickNumberDisplay(){
+    const done = picksDone();
+    return (pickDirection === "asc") ? (1 + done) : (TEAM_COUNT - done);
+  }
+
+  // =========================
+  // MUSIC
+  // =========================
+  function setMusicBaseVolumeFromSlider(){
+    const v = Number(musicVol.value);
+    musicVolLabel.textContent = `${v}%`;
+    musicBaseVol = Math.max(0, Math.min(1, v / 100));
+  }
+  function ensureMusicStarted(){
+    if (!musicInitialized) musicInitialized = true;
+    safePlay(musicAudio);
+  }
+  function cancelMusicFade(){
+    if (musicFadeRaf){ cancelAnimationFrame(musicFadeRaf); musicFadeRaf = null; }
+    if (musicRaiseTimer){ clearTimeout(musicRaiseTimer); musicRaiseTimer = null; }
+  }
+  function fadeMusicTo(targetVol, ms = MUSIC_FADE_MS){
+    cancelMusicFade();
+    musicFadeRaf = fadeVolume(musicAudio, musicAudio.volume, Math.max(0, Math.min(1, targetVol)), ms, () => { musicFadeRaf = null; });
+  }
+  function musicOnBeginFadeDown(){
+    ensureMusicStarted();
+    fadeMusicTo(musicBaseVol * MUSIC_LOW_FACTOR, MUSIC_FADE_MS);
+  }
+  function musicRaiseAfterDelay(delayMs = 500){
+    ensureMusicStarted();
+    cancelMusicFade();
+    musicRaiseTimer = setTimeout(() => {
+      musicRaiseTimer = null;
+      if (!running) fadeMusicTo(musicBaseVol, MUSIC_FADE_MS);
+    }, delayMs);
+  }
+  function onMusicSliderInput(){
+    setMusicBaseVolumeFromSlider();
+    ensureMusicStarted();
+    const target = running ? (musicBaseVol * MUSIC_LOW_FACTOR) : musicBaseVol;
+    cancelMusicFade();
+    musicAudio.volume = Math.max(0, Math.min(1, target));
+  }
+
+  // =========================
+  // CHEER
+  // =========================
+  function clearFinalCheerTimer(){
+    if (finalCheerStopTimer){ clearTimeout(finalCheerStopTimer); finalCheerStopTimer = null; }
+  }
+  function cancelCheerTimers(){
+    if (cheerStartTimer){ clearTimeout(cheerStartTimer); cheerStartTimer = null; }
+    if (cheerStopTimer){ clearTimeout(cheerStopTimer); cheerStopTimer = null; }
+    if (cheerFadeRaf){ cancelAnimationFrame(cheerFadeRaf); cheerFadeRaf = null; }
+  }
+  function fadeOutCheerNow(){
+    cancelCheerTimers();
+    clearFinalCheerTimer();
+    if (cheerAudio.paused){
+      stopAudio(cheerAudio);
+      cheerAudio.volume = 1;
+      return;
+    }
+    cheerFadeRaf = fadeVolume(cheerAudio, cheerAudio.volume, 0, CHEER_FADE_MS, () => {
+      cheerFadeRaf = null;
+      stopAudio(cheerAudio);
+      cheerAudio.volume = 1;
+    });
+  }
+  function scheduleCheer(delayMs = 500, playMs = 5000){
+    cancelCheerTimers();
+    clearFinalCheerTimer();
+    stopAudio(cheerAudio);
+    cheerAudio.volume = 1;
+
+    cheerStartTimer = setTimeout(() => {
+      cheerStartTimer = null;
+      safePlaySfx(cheerAudio);
+
+      cheerStopTimer = setTimeout(() => {
+        cheerStopTimer = null;
+        fadeOutCheerNow();
+      }, playMs);
+    }, delayMs);
+  }
+  function playFinalCheer(){
+    cancelCheerTimers();
+    clearFinalCheerTimer();
+    stopAudio(cheerAudio);
+    cheerAudio.volume = 1;
+
+    if (sfxToggle.checked){
+      safePlaySfx(cheerAudio);
+      finalCheerStopTimer = setTimeout(() => {
+        finalCheerStopTimer = null;
+        fadeOutCheerNow();
+      }, FINAL_CHEER_PLAY_MS);
+    }
+  }
+
+  // =========================
+  // Odds: totals, validation, normalization
+  // =========================
+  function clampOdds(n){
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(100, n));
+  }
+  function totalOddsAllTeams(){
+    return TEAMS.reduce((sum, t) => sum + clampOdds(Number(t.odds)), 0);
+  }
+  function setOddsStatusUI(){
+    const total = totalOddsAllTeams();
+    oddsTotalChip.textContent = `Total: ${total.toFixed(1)}%`;
+    const ok = Math.abs(total - 100) <= ODDS_TOLERANCE;
+    oddsStatusChip.className = ok ? 'chip ok' : 'chip warn';
+    oddsStatusChip.textContent = ok ? 'Valid' : 'Warning: not 100%';
+  }
+  function normalizedPctForTeam(team){
+    const total = totalOddsAllTeams();
+    const raw = clampOdds(Number(team.odds));
+    if (total <= 0) return (100 / TEAM_COUNT);
+    return (raw / total) * 100;
+  }
+  function setOddsToEqual(){
+    const equal = 100 / TEAM_COUNT;
+    for (const t of TEAMS) t.odds = Number(equal.toFixed(1));
+  }
+
+  // =========================
+  // UI rendering
+  // =========================
+  function renderTeams(){
+    teamList.innerHTML = '';
+    TEAMS.forEach((t) => {
+      const inPool = remaining.some(x => x.name === t.name);
+      const pill = document.createElement('div');
+      pill.className = 'pill' + (inPool ? '' : ' out');
+
+      const top = document.createElement('div');
+      top.className = 'pill-top';
+
+      const nameWrap = document.createElement('div');
+      nameWrap.className = 'pill-name';
+
+      const tag = document.createElement('div');
+      tag.className = 'pill-tag';
+      tag.textContent = getInitials(t.name);
+
+      const name = document.createElement('div');
+      name.className = 'pill-team';
+      name.textContent = t.name;
+
+      nameWrap.appendChild(tag);
+      nameWrap.appendChild(name);
+
+      const odds = document.createElement('div');
+      odds.className = 'pill-odds';
+      odds.textContent = `${normalizedPctForTeam(t).toFixed(1)}%`;
+
+      top.appendChild(nameWrap);
+      top.appendChild(odds);
+
+      const bar = document.createElement('div');
+      bar.className = 'oddsbar';
+      const fill = document.createElement('div');
+      fill.className = 'oddsfill';
+      fill.style.width = `${Math.max(0, Math.min(100, normalizedPctForTeam(t)))}%`;
+      bar.appendChild(fill);
+
+      pill.appendChild(top);
+      pill.appendChild(bar);
+      teamList.appendChild(pill);
+    });
+
+    remainingBadge.textContent = `${remaining.length} remaining`;
+  }
+
+  function autoScrollResultsToBottom(){
+    // Always keep newest visible
+    resultsList.scrollTop = resultsList.scrollHeight;
+  }
+
+  function renderResults(newestName=null){
+    resultsList.innerHTML = '';
+
+    results.forEach((r, idx) => {
+      const li = document.createElement('li');
+
+      const mini = document.createElement('span');
+      mini.className = 'result-ball';
+      mini.style.background = r.color;
+
+      const inner = document.createElement('span');
+      inner.className = 'inner';
+
+      const img = document.createElement('img');
+      img.alt = r.name;
+      img.onerror = () => { inner.innerHTML = `<span class="fallback">${getInitials(r.name)}</span>`; };
+      img.src = r.logo;
+
+      inner.appendChild(img);
+      mini.appendChild(inner);
+
+      const text = document.createElement('span');
+      const displayPick = (pickDirection === "asc") ? (idx + 1) : (TEAM_COUNT - idx);
+      text.textContent = `Pick #${displayPick}: ${r.name}`;
+
+      li.appendChild(mini);
+      li.appendChild(text);
+
+      if (newestName && r.name === newestName){
+        li.classList.add('newest');
+      }
+
+      resultsList.appendChild(li);
+    });
+
+    // auto-scroll after layout
+    requestAnimationFrame(autoScrollResultsToBottom);
+  }
+
+  function setPickLabel(){
+    pickLabel.textContent = `Pick #${currentPickNumberDisplay()}`;
+  }
+
+  function setButtons(){
+    beginBtn.disabled = running || remaining.length === 0;
+    stopBtn.disabled  = !running;
+    resetBtn.disabled = running;
+
+    const lockEdits = running || results.length > 0;
+    pickDirectionSel.disabled = lockEdits;
+    resetOddsBtn.disabled = lockEdits;
+  }
+
+  function clearArenaBalls(){
+    arena.querySelectorAll('.ball').forEach(b => b.remove());
+    balls = [];
+  }
+  function clearWinnerSlot(){
+    winnerSlot.querySelectorAll('.ball').forEach(b => b.remove());
+  }
+
+  function createBallNode(teamObj){
+    const ball = document.createElement('div');
+    ball.className = 'ball';
+    ball.style.background = teamObj.color;
+
+    const inner = document.createElement('div');
+    inner.className = 'ball-inner';
+
+    const img = document.createElement('img');
+    img.alt = teamObj.name;
+    img.onerror = () => { inner.innerHTML = `<div class="fallback">${getInitials(teamObj.name)}</div>`; };
+    img.src = teamObj.logo;
+
+    inner.appendChild(img);
+    ball.appendChild(inner);
+    return ball;
+  }
+
+  // =========================
+  // Odds panel (Enter to apply; no scroll jump)
+  // =========================
+  function applyOddsValue(team, rawString){
+    const num = clampOdds(Number(String(rawString).trim() === "" ? 0 : Number(rawString)));
+    team.odds = num;
+  }
+
+  function cssEscape(str){
+    return String(str).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  }
+
+  function renderOddsPanel(){
+    const prevScroll = oddsRows.scrollTop;
+    oddsRows.innerHTML = '';
+    const lock = running || results.length > 0;
+
+    for (const t of TEAMS){
+      const row = document.createElement('div');
+      row.className = 'odds-row';
+
+      const ball = document.createElement('div');
+      ball.className = 'odds-ball';
+      ball.style.background = t.color;
+
+      const inner = document.createElement('div');
+      inner.className = 'inner';
+
+      const img = document.createElement('img');
+      img.alt = t.name;
+      img.onerror = () => { inner.innerHTML = `<span class="fallback">${getInitials(t.name)}</span>`; };
+      img.src = t.logo;
+
+      inner.appendChild(img);
+      ball.appendChild(inner);
+
+      const mid = document.createElement('div');
+      mid.className = 'odds-mid';
+
+      const rowtop = document.createElement('div');
+      rowtop.className = 'rowtop';
+
+      const name = document.createElement('div');
+      name.className = 'odds-name';
+      name.textContent = t.name;
+
+      const pct = document.createElement('div');
+      pct.className = 'odds-pct';
+      pct.textContent = `${normalizedPctForTeam(t).toFixed(1)}%`;
+
+      rowtop.appendChild(name);
+      rowtop.appendChild(pct);
+
+      const bar = document.createElement('div');
+      bar.className = 'oddsbar';
+      const fill = document.createElement('div');
+      fill.className = 'oddsfill';
+      fill.style.width = `${Math.max(0, Math.min(100, normalizedPctForTeam(t)))}%`;
+      bar.appendChild(fill);
+
+      mid.appendChild(rowtop);
+      mid.appendChild(bar);
+
+      const inpWrap = document.createElement('div');
+      inpWrap.className = 'odds-input';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.inputMode = 'decimal';
+      input.placeholder = '0–100';
+      input.value = String(t.odds);
+      input.autocomplete = 'off';
+      input.spellcheck = false;
+      input.disabled = lock;
+      input.setAttribute('data-team', t.name);
+
+      const small = document.createElement('small');
+      small.textContent = 'press Enter';
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter'){
+          e.preventDefault();
+          applyOddsValue(t, input.value);
+          setOddsStatusUI();
+          renderTeams();
+          renderOddsPanel();
+          requestAnimationFrame(() => {
+            const newInput = oddsRows.querySelector(`input[data-team="${cssEscape(t.name)}"]`);
+            if (newInput){ newInput.focus(); newInput.select(); }
+          });
+        }
+      });
+
+      input.addEventListener('blur', () => {
+        applyOddsValue(t, input.value);
+        setOddsStatusUI();
+        renderTeams();
+        renderOddsPanel();
+      });
+
+      inpWrap.appendChild(input);
+      inpWrap.appendChild(small);
+
+      row.appendChild(ball);
+      row.appendChild(mid);
+      row.appendChild(inpWrap);
+
+      oddsRows.appendChild(row);
+    }
+
+    setOddsStatusUI();
+    requestAnimationFrame(() => { oddsRows.scrollTop = prevScroll; });
+  }
+
+  // =========================
+  // Weighted pick
+  // =========================
+  function chooseWinnerIndex(){
+    let total = 0;
+    const weights = remaining.map(t => {
+      const def = TEAMS.find(x => x.name === t.name);
+      const w = clampOdds(Number(def?.odds ?? t.odds ?? 0));
+      total += w;
+      return w;
+    });
+
+    if (total <= 0) return randInt(0, remaining.length - 1);
+
+    let r = Math.random() * total;
+    for (let i = 0; i < weights.length; i++){
+      r -= weights[i];
+      if (r <= 0) return i;
+    }
+    return weights.length - 1;
+  }
+
+  function currentSpeedScale(){
+    const done = picksDone();
+    return 1 + (done * SPEED_PER_PICK);
+  }
+
+  // =========================
+  // Final overlay
+  // =========================
+  function showFinalOverlay(){
+    finalGrid.innerHTML = '';
+    finalPickDirText.textContent = (pickDirection === "asc") ? "Pick Order: 1 → 10" : "Pick Order: 10 → 1";
+    finalSubtitle.textContent = "Lottery complete — big view for logos.";
+
+    results.forEach((r, idx) => {
+      const displayPick = (pickDirection === "asc") ? (idx + 1) : (TEAM_COUNT - idx);
+
+      const row = document.createElement('div');
+      row.className = 'final-row';
+
+      const pickBox = document.createElement('div');
+      pickBox.className = 'final-pick';
+      pickBox.textContent = `#${displayPick}`;
+
+      const ball = document.createElement('div');
+      ball.className = 'final-ball';
+      ball.style.background = r.color;
+
+      const inner = document.createElement('div');
+      inner.className = 'inner';
+
+      const img = document.createElement('img');
+      img.alt = r.name;
+      img.onerror = () => { inner.innerHTML = `<span class="fallback">${getInitials(r.name)}</span>`; };
+      img.src = r.logo;
+
+      inner.appendChild(img);
+      ball.appendChild(inner);
+
+      const name = document.createElement('div');
+      name.className = 'final-name';
+      name.textContent = r.name;
+
+      row.appendChild(pickBox);
+      row.appendChild(ball);
+      row.appendChild(name);
+
+      finalGrid.appendChild(row);
+    });
+
+    finalOverlay.classList.add('show');
+    finalOverlay.setAttribute('aria-hidden', 'false');
+    playFinalCheer();
+  }
+  function hideFinalOverlay(){
+    finalOverlay.classList.remove('show');
+    finalOverlay.setAttribute('aria-hidden', 'true');
+  }
+
+  // =========================
+  // Actions
+  // =========================
+  function begin(){
+    if (running || remaining.length === 0) return;
+
+    fadeOutCheerNow();
+    hideBanner();
+
+    ensureMusicStarted();
+    musicOnBeginFadeDown();
+
+    running = true;
+    setButtons();
+    renderOddsPanel();
+    setPickLabel();
+
+    clearWinnerSlot();
+    winnerName.textContent = "Bouncing…";
+    winnerSub.textContent = "Press Stop to drop a winner ball.";
+
+    clearArenaBalls();
+
+    const rect = arena.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+
+    winnerIndex = chooseWinnerIndex();
+
+    const radius = 46;
+    const pad = 1;
+
+    const scale = currentSpeedScale();
+    const speedMin = BASE_SPEED_MIN * scale;
+    const speedMax = BASE_SPEED_MAX * scale;
+
+    balls = remaining.map((teamObj) => {
+      const node = createBallNode(teamObj);
+      arena.appendChild(node);
+
+      const x = randFloat(radius + pad, w - radius - pad);
+      const y = randFloat(radius + pad, h - radius - pad);
+
+      const speed = randFloat(speedMin, speedMax);
+      const ang = randFloat(0, Math.PI * 2);
+      const vx = Math.cos(ang) * speed;
+      const vy = Math.sin(ang) * speed;
+
+      node.style.left = x + "px";
+      node.style.top  = y + "px";
+
+      return { teamObj, node, x, y, vx, vy, radius };
+    });
+
+    let last = performance.now();
+    const tick = (now) => {
+      if (!running) return;
+      const dt = Math.min(0.032, (now - last) / 1000);
+      last = now;
+
+      const r2 = arena.getBoundingClientRect();
+      const W = r2.width;
+      const H = r2.height;
+
+      for (const b of balls){
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+
+        const minX = b.radius + pad;
+        const maxX = W - b.radius - pad;
+        const minY = b.radius + pad;
+        const maxY = H - b.radius - pad;
+
+        if (b.x < minX){ b.x = minX; b.vx *= -1; }
+        if (b.x > maxX){ b.x = maxX; b.vx *= -1; }
+        if (b.y < minY){ b.y = minY; b.vy *= -1; }
+        if (b.y > maxY){ b.y = maxY; b.vy *= -1; }
+
+        b.node.style.left = b.x + "px";
+        b.node.style.top  = b.y + "px";
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function stop(){
+    if (!running) return;
+
+    running = false;
+    setButtons();
+    renderOddsPanel();
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+
+    musicRaiseAfterDelay(500);
+    cancelCheerTimers();
+
+    const winnerBallObj = balls[winnerIndex];
+    const winnerTeam = winnerBallObj.teamObj;
+
+    const pickNo = currentPickNumberDisplay();
+    winnerName.textContent = winnerTeam.name;
+    winnerSub.textContent = `Selected for Pick #${pickNo}`;
+
+    clearWinnerSlot();
+
+    const winnerBall = createBallNode(winnerTeam);
+    winnerBall.classList.add('dropping');
+    winnerSlot.appendChild(winnerBall);
+
+    const slotRect = winnerSlot.getBoundingClientRect();
+    const endX = slotRect.width / 2;
+    const endY = slotRect.height / 2;
+
+    winnerBall.style.left = endX + "px";
+    winnerBall.style.top  = (-110) + "px";
+
+    for (const b of balls){
+      b.node.classList.add('fading');
+    }
+
+    requestAnimationFrame(() => {
+      winnerBall.style.left = endX + "px";
+      winnerBall.style.top  = endY + "px";
+      winnerBall.style.transform = "translate(-50%,-50%) scale(1.12)";
+    });
+
+    safePlaySfx(dropAudio);
+    scheduleCheer(500, 5000);
+
+    setTimeout(() => {
+      clearArenaBalls();
+
+      results.push({ name: winnerTeam.name, logo: winnerTeam.logo, color: winnerTeam.color });
+      remaining = remaining.filter(t => t.name !== winnerTeam.name);
+
+      renderTeams();
+      renderResults(winnerTeam.name);
+
+      // Banner above results
+      showBanner(`PICK IS IN!  —  Pick #${pickNo}: ${winnerTeam.name}`);
+
+      setPickLabel();
+
+      if (remaining.length === 0){
+        winnerSub.textContent = "Lottery complete.";
+        beginBtn.disabled = true;
+        stopBtn.disabled = true;
+
+        setTimeout(() => showFinalOverlay(), 450);
+      } else {
+        beginBtn.disabled = false;
+      }
+      setButtons();
+      renderOddsPanel();
+    }, 640);
+  }
+
+  function reset(){
+    fadeOutCheerNow();
+    hideFinalOverlay();
+    hideBanner();
+
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+
+    running = false;
+    winnerIndex = null;
+
+    cancelCheerTimers();
+    clearFinalCheerTimer();
+    stopAudio(dropAudio);
+
+    cancelMusicFade();
+    ensureMusicStarted();
+    musicAudio.volume = musicBaseVol;
+
+    remaining = TEAMS.map(t => ({...t}));
+    results = [];
+
+    clearArenaBalls();
+    clearWinnerSlot();
+
+    renderOddsPanel();
+    renderTeams();
+    renderResults();
+    setPickLabel();
+
+    winnerName.textContent = "Ready…";
+    winnerSub.textContent = "Press Begin to start.";
+    setButtons();
+    renderOddsPanel();
+  }
+
+  // =========================
+  // Events
+  // =========================
+  beginBtn.addEventListener('click', begin);
+  stopBtn.addEventListener('click', stop);
+  resetBtn.addEventListener('click', reset);
+  finalResetBtn.addEventListener('click', reset);
+
+  musicVol.addEventListener('input', onMusicSliderInput);
+
+  pickDirectionSel.addEventListener('change', () => {
+    pickDirection = pickDirectionSel.value;
+    setPickLabel();
+    renderResults(); // refresh pick numbering
+    autoScrollResultsToBottom();
+  });
+
+  resetOddsBtn.addEventListener('click', () => {
+    if (running || results.length > 0) return;
+    setOddsToEqual();
+    setOddsStatusUI();
+    renderOddsPanel();
+    renderTeams();
+  });
+
+  window.addEventListener('load', () => {
+    setMusicBaseVolumeFromSlider();
+    musicAudio.volume = musicBaseVol;
+    safePlay(musicAudio); // may be blocked until first click
+  });
+
+  // =========================
+  // Init
+  // =========================
+  function init(){
+    remaining = TEAMS.map(t => ({...t}));
+    results = [];
+    pickDirection = pickDirectionSel.value;
+
+    setOddsStatusUI();
+    renderOddsPanel();
+    renderTeams();
+    renderResults();
+    setPickLabel();
+    setButtons();
+
+    winnerName.textContent = "Ready…";
+    winnerSub.textContent = "Press Begin to start.";
+
+    setMusicBaseVolumeFromSlider();
+    musicAudio.volume = musicBaseVol;
+
+    // show initial banner briefly
+    showBanner("READY TO DRAW — PRESS BEGIN");
+    setTimeout(() => hideBanner(), 1600);
+  }
+  init();
+</script>
+</body>
+</html>
